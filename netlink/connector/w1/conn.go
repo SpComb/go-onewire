@@ -23,54 +23,40 @@ type Conn struct {
 }
 
 func (c *Conn) Send(msg Message) error {
-	log.Debugf("Send: %#v", msg)
-
-	var connectorMsg = connector.Message{
-		Header: connector.Header{
-			ID: W1_ID,
-		},
-	}
-
-	if data, err := msg.MarshalBinary(); err != nil {
+	if connectorMsg, err := packMessage(msg); err != nil {
+		return err
+	} else if err := c.connectorConn.Send(connectorMsg); err != nil {
 		return err
 	} else {
-		connectorMsg.Data = data
-	}
+		log.Debugf("Send: %#v", msg)
 
-	return c.connectorConn.Send(connectorMsg)
+		return nil
+	}
 }
 
 func (c *Conn) Receive() ([]Message, error) {
-	connectorMessages, err := c.connectorConn.Receive()
-	if err != nil {
+	if connectorMsgs, err := c.connectorConn.Receive(); err != nil {
 		return nil, err
+	} else if msgs, err := unpackMessages(connectorMsgs); err != nil {
+		return nil, err
+	} else {
+		log.Debugf("Receive: %#v", msgs)
+
+		return msgs, nil
 	}
-
-	var msgs = make([]Message, len(connectorMessages))
-	for i, connectorMessage := range connectorMessages {
-		var msg Message
-
-		if err := msg.UnmarshalBinary(connectorMessage.Data); err != nil {
-			return nil, err
-		}
-
-		log.Debugf("Receive: %#v", msg)
-
-		msgs[i] = msg
-	}
-
-	return msgs, nil
 }
 
-func (c *Conn) Request(msg Message) ([]Message, error) {
-	if err := c.Send(msg); err != nil {
-		return nil, fmt.Errorf("Send: %v", err)
-	}
-
-	if msgs, err := c.Receive(); err != nil {
-		return nil, fmt.Errorf("Receive: %v", err)
-	} else {
+func (c *Conn) Execute(msg Message) ([]Message, error) {
+	if connectorMsg, err := packMessage(msg); err != nil {
+		return nil, err
+	} else if connectorMsgs, err := c.connectorConn.Execute(connectorMsg); err != nil {
+		return nil, err
+	} else if msgs, err := unpackMessages(connectorMsgs); err != nil {
 		return msgs, err
+	} else {
+		log.Debugf("Execute %#v: %#v", msg, msgs)
+
+		return msgs, nil
 	}
 }
 
@@ -81,7 +67,7 @@ func (c *Conn) ListMasters() (MasterList, error) {
 		},
 	}
 
-	msgs, err := c.Request(msg)
+	msgs, err := c.Execute(msg)
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +104,7 @@ func (c *Conn) ListSlaves(masterID MasterID) (SlaveList, error) {
 		msg.Data = data
 	}
 
-	msgs, err := c.Request(msg)
+	msgs, err := c.Execute(msg)
 	if err != nil {
 		return nil, err
 	}

@@ -48,50 +48,45 @@ func (c *Conn) Send(msg Message) error {
 		msg.Seq = c.nextSeq()
 	}
 
-	log.Debugf("Send: %#v", msg)
-
-	var netlinkMessage = netlink.Message{
-		Header: netlink.Header{
-			Type:     netlink.HeaderTypeDone,
-			Sequence: msg.Seq,
-		},
-	}
-
-	if data, err := msg.MarshalBinary(); err != nil {
-		return fmt.Errorf("Msg.MarshalBinary: %v", err)
-	} else {
-		netlinkMessage.Data = data
-	}
-
-	if _, err := c.netlinkConn.Send(netlinkMessage); err != nil {
+	if netlinkMessage, err := packMessage(&msg); err != nil {
+		return err
+	} else if _, err := c.netlinkConn.Send(netlinkMessage); err != nil {
 		return fmt.Errorf("netlink Send: %v", err)
+	} else {
+		log.Debugf("Send: %#v", msg)
 	}
 
 	return nil
 }
 
 func (c *Conn) Receive() ([]Message, error) {
-	netlinkMessages, err := c.netlinkConn.Receive()
-	if err != nil {
+	if netlinkMessages, err := c.netlinkConn.Receive(); err != nil {
 		return nil, fmt.Errorf("netlink Receive: %v", err)
+	} else if msgs, err := unpackMessages(netlinkMessages); err != nil {
+		return nil, err
+	} else {
+		log.Debugf("Recv: %#v", msgs)
+
+		return msgs, nil
+	}
+}
+
+func (c *Conn) Execute(msg Message) ([]Message, error) {
+	if msg.Seq == 0 {
+		msg.Seq = c.nextSeq()
 	}
 
-	var msgs = make([]Message, len(netlinkMessages))
-	for i, netlinkMessage := range netlinkMessages {
-		log.Debugf("netlink Recv: %#v", netlinkMessage)
+	if netlinkMsg, err := packMessage(&msg); err != nil {
+		return nil, err
+	} else if netlinkMsgs, err := c.netlinkConn.Execute(netlinkMsg); err != nil {
+		return nil, fmt.Errorf("netlink Execute %#v: %v", netlinkMsg, err)
+	} else if msgs, err := unpackMessages(netlinkMsgs); err != nil {
+		return nil, err
+	} else {
+		log.Debugf("Exchange %#v: %#v", msg, msgs)
 
-		var msg Message
-
-		if err := msg.UnmarshalBinary(netlinkMessage.Data); err != nil {
-			return nil, err
-		}
-
-		log.Debugf("Recv: %#v", msg)
-
-		msgs[i] = msg
+		return msgs, nil
 	}
-
-	return msgs, nil
 }
 
 func (c *Conn) Close() error {
