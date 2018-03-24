@@ -62,7 +62,9 @@ func (cmd *Cmd) unmarshalBinary(reader io.Reader) error {
 
 	cmd.Data = make([]byte, cmd.Len)
 
-	if read, err := reader.Read(cmd.Data); err != nil {
+	if cmd.Len == 0 {
+
+	} else if read, err := reader.Read(cmd.Data); err != nil {
 		return err
 	} else if read != len(cmd.Data) {
 		return io.EOF
