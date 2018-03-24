@@ -6,8 +6,10 @@ import (
 	"fmt"
 )
 
+type Family uint8
+
 type SlaveID struct {
-	Family uint8
+	Family Family
 	Serial [6]uint8
 	CRC    uint8
 }
@@ -26,7 +28,7 @@ func (id SlaveID) String() string {
 
 func (id SlaveID) Pack() MessageID {
 	return MessageID{
-		id.Family,
+		byte(id.Family),
 		id.Serial[5],
 		id.Serial[4],
 		id.Serial[3],
@@ -38,7 +40,7 @@ func (id SlaveID) Pack() MessageID {
 }
 
 func (id *SlaveID) Unpack(msgID MessageID) error {
-	id.Family = msgID[0]
+	id.Family = Family(msgID[0])
 	id.Serial[0] = msgID[6]
 	id.Serial[1] = msgID[5]
 	id.Serial[2] = msgID[4]
