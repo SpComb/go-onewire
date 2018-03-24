@@ -16,6 +16,10 @@ type Device struct {
 	id   w1.SlaveID
 }
 
+func (d *Device) String() string {
+	return d.id.String()
+}
+
 func (d *Device) Cmd(cmd Cmd, write []byte, read []byte) error {
 	write = append([]byte{byte(cmd)}, write...)
 
