@@ -22,7 +22,7 @@ type MessageID [8]byte
 
 type Header struct {
 	Type   MsgType
-	Status uint8
+	Status ErrorStatus
 	Len    uint16
 	ID     MessageID
 }

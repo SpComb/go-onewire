@@ -53,6 +53,8 @@ func (c *Conn) Execute(msg Message) ([]Message, error) {
 		return nil, err
 	} else if msgs, err := unpackMessages(connectorMsgs); err != nil {
 		return msgs, err
+	} else if err := validateMessages(msg, msgs); err != nil {
+		return msgs, fmt.Errorf("Execute: %v", err)
 	} else {
 		log.Debugf("Execute %#v: %#v", msg, msgs)
 

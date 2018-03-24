@@ -35,5 +35,14 @@ func unpackMessages(connectorMessages []connector.Message) ([]Message, error) {
 	}
 
 	return msgs, nil
+}
 
+func validateMessages(msg Message, msgs []Message) error {
+	for _, msg := range msgs {
+		if msg.Status != 0 {
+			return msg.Status
+		}
+	}
+
+	return nil
 }
