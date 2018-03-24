@@ -197,6 +197,7 @@ func (c *Conn) CmdSlave(slaveID SlaveID, write []byte, read []byte) error {
 		return err
 	}
 
+	var cmdCount = len(cmds)
 	var cmdAcks = 0
 
 	for {
@@ -212,7 +213,7 @@ func (c *Conn) CmdSlave(slaveID SlaveID, write []byte, read []byte) error {
 				return err
 			}
 
-			log.Debugf("Receive: %#v", msg)
+			log.Debugf("Receive seq=%d ack=%d: %#v", connectorMsg.Seq, connectorMsg.Ack, msg)
 
 			cmds, err := UnmarshalCmdList(msg.Data)
 			if err != nil {
@@ -224,7 +225,7 @@ func (c *Conn) CmdSlave(slaveID SlaveID, write []byte, read []byte) error {
 					// read/write ack
 					cmdAcks++
 
-					log.Debugf("CmdSlave %v: ack %v (%d/%d)", slaveID, cmd.Cmd, cmdAcks, len(cmds))
+					log.Debugf("CmdSlave %v: ack %v (%d/%d)", slaveID, cmd.Cmd, cmdAcks, cmdCount)
 
 				} else if cmd.Cmd == CmdRead {
 					if len(cmd.Data) != len(read) {
@@ -240,7 +241,7 @@ func (c *Conn) CmdSlave(slaveID SlaveID, write []byte, read []byte) error {
 			}
 		}
 
-		if cmdAcks >= len(cmds) {
+		if cmdAcks >= cmdCount {
 			break
 		}
 	}
