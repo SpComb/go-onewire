@@ -124,10 +124,14 @@ func (c *Conn) ListSlaves(masterID MasterID) (SlaveList, error) {
 			var msg Message
 
 			if err := msg.UnmarshalBinary(connectorMsg.Data); err != nil {
-				return nil, err
+				return slaveList, err
 			}
 
 			log.Debugf("Receive: %#v", msg)
+
+			if msg.Status != 0 {
+				return slaveList, msg.Status
+			}
 
 			cmds, err := UnmarshalCmdList(msg.Data)
 			if err != nil {
@@ -214,6 +218,10 @@ func (c *Conn) CmdSlave(slaveID SlaveID, write []byte, read []byte) error {
 			}
 
 			log.Debugf("Receive seq=%d ack=%d: %#v", connectorMsg.Seq, connectorMsg.Ack, msg)
+
+			if msg.Status != 0 {
+				return msg.Status
+			}
 
 			cmds, err := UnmarshalCmdList(msg.Data)
 			if err != nil {
