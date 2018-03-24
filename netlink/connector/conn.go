@@ -53,6 +53,7 @@ func (c *Conn) Send(msg Message) error {
 	} else if _, err := c.netlinkConn.Send(netlinkMessage); err != nil {
 		return fmt.Errorf("netlink Send: %v", err)
 	} else {
+		log.Debugf("netlink Send: %#v", netlinkMessage)
 		log.Debugf("Send: %#v", msg)
 	}
 
@@ -65,6 +66,7 @@ func (c *Conn) Receive() ([]Message, error) {
 	} else if msgs, err := unpackMessages(netlinkMessages); err != nil {
 		return nil, err
 	} else {
+		log.Debugf("netlink Recv: %#v", netlinkMessages)
 		log.Debugf("Recv: %#v", msgs)
 
 		return msgs, nil
