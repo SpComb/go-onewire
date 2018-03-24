@@ -92,9 +92,9 @@ func (c *Conn) ListMasters() (MasterList, error) {
 		if err := masterList.UnmarshalBinary(msg.Data); err != nil {
 			return masterList, fmt.Errorf("Unmarshal %T: %v", masterList, err)
 		}
-
-		log.Debugf("ListMasters: %#v", masterList)
 	}
+
+	log.Infof("ListMasters: %v", masterList)
 
 	return masterList, nil
 }
@@ -135,10 +135,10 @@ func (c *Conn) ListSlaves(masterID MasterID) (SlaveList, error) {
 			if err := slaveList.UnmarshalBinary(cmd.Data); err != nil {
 				return slaveList, fmt.Errorf("Unmarshal %T: %v", slaveList, err)
 			}
-
-			log.Debugf("ListSlaves %v: %#v", masterID, slaveList)
 		}
 	}
+
+	log.Infof("ListSlaves %v: %v", masterID, slaveList)
 
 	return slaveList, nil
 }
