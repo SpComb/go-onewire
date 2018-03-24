@@ -169,6 +169,8 @@ func (c *Conn) CmdSlave(slaveID SlaveID, write []byte, read []byte) error {
 	var cmds []Cmd
 
 	if write != nil {
+		log.Infof("CmdSlave %v: write %v", slaveID, write)
+
 		cmds = append(cmds, Cmd{
 			CmdHeader: CmdHeader{
 				Cmd: CmdWrite,
@@ -222,7 +224,7 @@ func (c *Conn) CmdSlave(slaveID SlaveID, write []byte, read []byte) error {
 					// read/write ack
 					cmdAcks++
 
-					log.Debugf("ReadSlave %v: ack %v (%d/%d)", slaveID, cmd.Cmd, cmdAcks, len(cmds))
+					log.Debugf("CmdSlave %v: ack %v (%d/%d)", slaveID, cmd.Cmd, cmdAcks, len(cmds))
 
 				} else if cmd.Cmd == CmdRead {
 					if len(cmd.Data) != len(read) {
@@ -230,7 +232,7 @@ func (c *Conn) CmdSlave(slaveID SlaveID, write []byte, read []byte) error {
 					} else {
 						copy(read, cmd.Data)
 
-						log.Infof("ReadSlave %v: %#v", slaveID, cmd.Data)
+						log.Infof("CmdSlave %v: read %v", slaveID, cmd.Data)
 					}
 				} else {
 					return fmt.Errorf("Unexpected response cmd %v: %#v", cmd.Cmd, msg)
