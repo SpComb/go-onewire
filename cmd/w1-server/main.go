@@ -39,11 +39,20 @@ func init() {
 
 }
 
-func run(server *server.Server) error {
-	go options.Web.Server(
+func webServer(server *server.Server) {
+	err := options.Web.Server(
 		options.Web.RouteAPI("/api/", server.WebAPI()),
 		options.Web.RouteStatic("/"),
 	)
+
+	if err != nil {
+		log.Errorf("web Server: %v", err)
+		os.Exit(1)
+	}
+}
+
+func run(server *server.Server) error {
+	go webServer(server)
 
 	return server.Run()
 }
