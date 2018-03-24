@@ -1,3 +1,22 @@
+# Libraries
+
+### `github.com/SpComb/go-onewire/netlink/connector`
+
+Linux `NETLINK_CONNECTOR` protocol support.
+
+[![](https://godoc.org/github.com/SpComb/go-onewire/netlink/connector?status.svg)](http://godoc.org/github.com/SpComb/go-onewire/netlink/connector)
+
+### `github.com/SpComb/go-onewire/netlink/connector/w1`
+
+Linux `w1` netlink protocol support.
+
+[![](https://godoc.org/github.com/SpComb/go-onewire/netlink/connector/w1?status.svg)](http://godoc.org/github.com/SpComb/go-onewire/netlink/connector/w1)
+
+### `github.com/SpComb/go-onewire/netlink/connector/w1/ds18b20`
+
+DS18B20 specific support for the Linux `w1` netlink API.
+
+[![](https://godoc.org/github.com/SpComb/go-onewire/netlink/connector/w1/ds18b20?status.svg)](http://godoc.org/github.com/SpComb/go-onewire/netlink/connector/w1/ds18b20)
 
 # Server
 
