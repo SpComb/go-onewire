@@ -1,11 +1,15 @@
 package w1
 
 import (
-	"fmt"
+	"syscall"
 )
 
 type ErrorStatus uint8
 
+func (err ErrorStatus) Errno() syscall.Errno {
+	return syscall.Errno(err)
+}
+
 func (err ErrorStatus) Error() string {
-	return fmt.Sprintf("errno -%d", uint8(err))
+	return err.Errno().Error()
 }
