@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/SpComb/iot-poc/netlink/connector/w1"
-	"github.com/SpComb/iot-poc/server"
+	"github.com/SpComb/go-onewire/netlink/connector/w1"
+	"github.com/SpComb/go-onewire/server"
 	"github.com/qmsk/go-logging"
 	"github.com/qmsk/go-web"
 

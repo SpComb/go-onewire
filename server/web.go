@@ -1,7 +1,7 @@
 package server
 
 import (
-	"github.com/SpComb/iot-poc/api"
+	"github.com/SpComb/go-onewire/api"
 	"github.com/qmsk/go-web"
 )
 

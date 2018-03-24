@@ -1,7 +1,7 @@
 package w1
 
 import (
-	"github.com/SpComb/iot-poc/netlink/connector"
+	"github.com/SpComb/go-onewire/netlink/connector"
 
 	"fmt"
 )

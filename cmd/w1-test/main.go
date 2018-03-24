@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/SpComb/iot-poc/netlink/connector"
-	"github.com/SpComb/iot-poc/netlink/connector/w1"
-	"github.com/SpComb/iot-poc/netlink/connector/w1/ds18b20"
+	"github.com/SpComb/go-onewire/netlink/connector"
+	"github.com/SpComb/go-onewire/netlink/connector/w1"
+	"github.com/SpComb/go-onewire/netlink/connector/w1/ds18b20"
 	"github.com/qmsk/go-logging"
 
 	"flag"

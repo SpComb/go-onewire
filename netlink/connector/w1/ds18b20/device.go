@@ -1,7 +1,7 @@
 package ds18b20
 
 import (
-	"github.com/SpComb/iot-poc/netlink/connector/w1"
+	"github.com/SpComb/go-onewire/netlink/connector/w1"
 )
 
 func MakeDevice(conn *w1.Conn, id w1.SlaveID) Device {

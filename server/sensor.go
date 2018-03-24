@@ -1,9 +1,9 @@
 package server
 
 import (
-	"github.com/SpComb/iot-poc/api"
-	"github.com/SpComb/iot-poc/netlink/connector/w1"
-	"github.com/SpComb/iot-poc/netlink/connector/w1/ds18b20"
+	"github.com/SpComb/go-onewire/api"
+	"github.com/SpComb/go-onewire/netlink/connector/w1"
+	"github.com/SpComb/go-onewire/netlink/connector/w1/ds18b20"
 
 	"time"
 )
