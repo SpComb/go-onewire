@@ -36,9 +36,9 @@ func (c *Conn) Send(msg Message) error {
 
 func (c *Conn) Receive() ([]Message, error) {
 	if connectorMsgs, err := c.connectorConn.Receive(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("connector Receive: %v", err)
 	} else if msgs, err := unpackMessages(connectorMsgs); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("w1 unpack %#v: %v", connectorMsgs, err)
 	} else {
 		log.Debugf("Receive: %#v", msgs)
 
@@ -106,23 +106,50 @@ func (c *Conn) ListSlaves(masterID MasterID) (SlaveList, error) {
 		msg.Data = data
 	}
 
-	msgs, err := c.Execute(msg)
-	if err != nil {
+	if err := c.Send(msg); err != nil {
 		return nil, err
 	}
 
 	var slaveList SlaveList
+	var cmdAcks = 0
 
-	for _, msg := range msgs {
-		cmds, err := UnmarshalCmdList(msg.Data)
+	for {
+		// SLAVE_LIST results in multiple response messages with increasing ack, until last message with ack == 0
+		connectorMsgs, err := c.connectorConn.Receive()
 		if err != nil {
-			return slaveList, fmt.Errorf("UnmarshalCmdList: %v", err)
+			return slaveList, err
 		}
 
-		for _, cmd := range cmds {
-			if err := slaveList.UnmarshalBinary(cmd.Data); err != nil {
-				return slaveList, fmt.Errorf("Unmarshal %T: %v", slaveList, err)
+		for _, connectorMsg := range connectorMsgs {
+			var msg Message
+
+			if err := msg.UnmarshalBinary(connectorMsg.Data); err != nil {
+				return nil, err
 			}
+
+			log.Debugf("Receive: %#v", msg)
+
+			cmds, err := UnmarshalCmdList(msg.Data)
+			if err != nil {
+				return slaveList, fmt.Errorf("UnmarshalCmdList: %v", err)
+			}
+
+			for _, cmd := range cmds {
+				if connectorMsg.Ack == 0 {
+					cmdAcks++
+
+				} else if cmd.Cmd == CmdListSlaves {
+					if err := slaveList.UnmarshalBinary(cmd.Data); err != nil {
+						return slaveList, fmt.Errorf("Unmarshal %T: %v", slaveList, err)
+					}
+				} else {
+					return nil, fmt.Errorf("Unexpected response cmd %v: %#v", cmd.Cmd, msg)
+				}
+			}
+		}
+
+		if cmdAcks >= 1 {
+			break
 		}
 	}
 
