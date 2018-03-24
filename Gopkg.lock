@@ -19,6 +19,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/snksoft/crc"
+  packages = ["."]
+  revision = "b1d83c94b790e14d4c89d312b8d143873a62bc27"
+
+[[projects]]
+  branch = "master"
   name = "golang.org/x/net"
   packages = ["bpf"]
   revision = "6078986fec03a1dcc236c34816c71b0e05018fda"
@@ -32,6 +38,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "7820992289f74b23a56da6c30ff16458cc95e5010986cbb1bb8591b061667755"
+  inputs-digest = "5c854c61b8a911a65caf37abbfdf189da08f560df02966319ff789fb6ebf244b"
   solver-name = "gps-cdcl"
   solver-version = 1

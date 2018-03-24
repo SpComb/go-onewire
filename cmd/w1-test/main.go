@@ -45,10 +45,10 @@ func scan(w1conn *w1.Conn) error {
 					case ds18b20.Family:
 						var device = ds18b20.MakeDevice(w1conn, slaveID)
 
-						if scratchpad, err := device.ReadScratchpad(); err != nil {
-							log.Errorf("Slave %v: ReadScratchpad: %v", slaveID, err)
+						if s, err := device.Read(); err != nil {
+							log.Errorf("Slave %v: Read: %v", slaveID, err)
 						} else {
-							log.Infof("DS18B20 %v: Scratchpad=%#v", slaveID, scratchpad)
+							log.Infof("DS18B20 %v: %#v", slaveID, s)
 						}
 
 						if err := device.ConvertT(); err != nil {

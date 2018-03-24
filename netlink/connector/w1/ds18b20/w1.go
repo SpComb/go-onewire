@@ -3,6 +3,7 @@ package ds18b20
 import (
 	"github.com/SpComb/iot-poc/netlink/connector/w1"
 
+	"fmt"
 	"io"
 )
 
@@ -32,6 +33,10 @@ type Scratchpad struct {
 func (s *Scratchpad) unpack(data []byte) error {
 	if len(data) != scratchpadSize {
 		return io.EOF
+	}
+
+	if !CheckCRC(data) {
+		return fmt.Errorf("CRC check failed")
 	}
 
 	s.Temperature = unpackTemperature(data[0], data[1])

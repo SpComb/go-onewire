@@ -27,7 +27,8 @@ func (d *Device) ConvertT() error {
 	return d.Cmd(CmdConvertT, nil, nil)
 }
 
-func (d *Device) ReadScratchpad() (Scratchpad, error) {
+// Checks CRC, fails on bus errors
+func (d *Device) Read() (Scratchpad, error) {
 	var scratchpad Scratchpad
 	var read = make([]byte, scratchpadSize)
 
@@ -42,6 +43,7 @@ func (d *Device) ReadScratchpad() (Scratchpad, error) {
 	return scratchpad, nil
 }
 
+// NOTE: this does not check CRCs, and will return an invalid temperature on bus errors
 func (d *Device) ReadTemperature() (Temperature, error) {
 	var read = make([]byte, 2)
 
