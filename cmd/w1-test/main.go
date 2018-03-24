@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/SpComb/iot-poc/netlink/connector"
 	"github.com/SpComb/iot-poc/netlink/connector/w1"
+	"github.com/SpComb/iot-poc/netlink/connector/w1/ds18b20"
 	"github.com/qmsk/go-logging"
 
 	"flag"
@@ -47,15 +48,27 @@ func run() error {
 				return fmt.Errorf("w1.ListSlaves %v: %v", masterID, err)
 			} else {
 				for _, slaveID := range slaves {
-					log.Infof("Slave: %v", slaveID)
 
-					var writeBuf = []byte{0xBE}
-					var readBuf = make([]byte, 2)
+					switch slaveID.Family {
+					case ds18b20.Family:
+						var device = ds18b20.MakeDevice(w1conn, slaveID)
 
-					if err := w1conn.CmdSlave(slaveID, writeBuf, readBuf); err != nil {
-						return fmt.Errorf("w1.ReadSlave %v: %v", slaveID, err)
-					} else {
-						log.Infof("Slave %v: %v", slaveID, readBuf)
+						if scratchpad, err := device.ReadScratchpad(); err != nil {
+							log.Errorf("Slave %v: ReadScratchpad: %v", slaveID, err)
+						} else {
+							log.Infof("DS18B20 %v: Scratchpad=%#v", slaveID, scratchpad)
+						}
+
+						if err := device.ConvertT(); err != nil {
+							log.Errorf("Slave %v: ConvertT: %v", slaveID, err)
+						} else if temp, err := device.ReadTemperature(); err != nil {
+							log.Errorf("Slave %v: ReadTemperature: %v", slaveID, err)
+						} else {
+							log.Infof("DS18B20 %v: Temperature=%v", slaveID, temp)
+						}
+
+					default:
+						log.Warnf("Slave %v: unknown family=%02x", slaveID, slaveID.Family)
 					}
 				}
 			}
