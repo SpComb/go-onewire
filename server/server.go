@@ -50,19 +50,16 @@ type Server struct {
 func (s *Server) listenEvents() error {
 	defer close(s.eventChan)
 
-	if err := s.eventConn.Listen(); err != nil {
+	err := s.eventConn.Listen(func(event w1.Event) error {
+		s.eventChan <- event
+		return nil
+	})
+
+	if err != nil {
 		return fmt.Errorf("w1 Listen: %v", err)
 	}
 
-	for {
-		err := s.eventConn.ReadEvents(func(event w1.Event) {
-			s.eventChan <- event
-		})
-
-		if err != nil {
-			return err
-		}
-	}
+	return nil
 }
 
 func (s *Server) scan() error {

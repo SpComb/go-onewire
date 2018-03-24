@@ -70,7 +70,7 @@ func scan(w1conn *w1.Conn) error {
 	return nil
 }
 
-func onEvent(event w1.Event) {
+func onEvent(event w1.Event) error {
 	switch event.Type {
 	case w1.MsgTypeSlaveAdd:
 		log.Infof("Add Slave: %v", event.SlaveID())
@@ -81,18 +81,16 @@ func onEvent(event w1.Event) {
 	case w1.MsgTypeMasterRemove:
 		log.Infof("Remove Master: %v", event.MasterID())
 	}
+
+	return nil
 }
 
 func listen(w1conn *w1.Conn) error {
-	if err := w1conn.Listen(); err != nil {
+	if err := w1conn.Listen(onEvent); err != nil {
 		return fmt.Errorf("w1 Listen: %v", err)
 	}
 
-	for {
-		if err := w1conn.ReadEvents(onEvent); err != nil {
-			return fmt.Errorf("w1 ReadEvent: %v", err)
-		}
-	}
+	return nil
 }
 
 func run() error {

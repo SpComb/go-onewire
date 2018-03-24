@@ -248,26 +248,35 @@ func (c *Conn) CmdSlave(slaveID SlaveID, write []byte, read []byte) error {
 	return nil
 }
 
-func (c *Conn) Listen() error {
-	return c.connectorConn.JoinGroup(ConnectorID)
-}
-
-func (c *Conn) ReadEvents(f func(Event)) error {
-	msgs, err := c.Receive()
-	if err != nil {
+// Subscribe to w1 events
+// The conn may only be used for events, not queries
+func (c *Conn) Listen(f func(Event) error) error {
+	if err := c.connectorConn.JoinGroup(ConnectorID); err != nil {
 		return err
 	}
 
-	for _, msg := range msgs {
-		log.Infof("ReadEvent: %#v", msg)
+	for {
+		msgs, err := c.Receive()
+		if err != nil {
+			return err
+		}
 
-		switch msg.Type {
-		case MsgTypeSlaveAdd, MsgTypeSlaveRemove:
-			f(Event{msg.Type, msg.ID})
-		case MsgTypeMasterAdd, MsgTypeMasterRemove:
-			f(Event{msg.Type, msg.ID})
-		default:
-			return fmt.Errorf("Unexpected event message: %#v", msg)
+		for _, msg := range msgs {
+			var event Event
+			log.Infof("ReadEvent: %#v", msg)
+
+			switch msg.Type {
+			case MsgTypeSlaveAdd, MsgTypeSlaveRemove:
+				event = Event{msg.Type, msg.ID}
+			case MsgTypeMasterAdd, MsgTypeMasterRemove:
+				event = Event{msg.Type, msg.ID}
+			default:
+				return fmt.Errorf("Unexpected event message: %#v", msg)
+			}
+
+			if err := f(event); err != nil {
+				return err
+			}
 		}
 	}
 
