@@ -1,3 +1,12 @@
+Linux onewire netlink golang library + REST API server.
+
+# Support
+
+Developed/tested on:
+
+* Go 1.9
+* Raspberry Pi 2 Model B, Raspbian stretch, Linux 4.9
+
 # Libraries
 
 ### `github.com/SpComb/go-onewire/api`
@@ -11,6 +20,9 @@ API definitions for the `server`
 Linux `NETLINK_CONNECTOR` protocol support.
 
 [![](https://godoc.org/github.com/SpComb/go-onewire/netlink/connector?status.svg)](http://godoc.org/github.com/SpComb/go-onewire/netlink/connector)
+
+#### Issues
+* https://github.com/SpComb/go-onewire/issues/1 netlink/connector requires forked github.com/mdlayher/netlink
 
 ### `github.com/SpComb/go-onewire/netlink/connector/w1`
 
