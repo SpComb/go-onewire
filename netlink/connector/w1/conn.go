@@ -91,7 +91,7 @@ func (c *Conn) ListSlaves(masterID MasterID) (SlaveList, error) {
 	var msg = Message{
 		Header: Header{
 			Type: MsgTypeMasterCmd,
-			ID:   IDMaster{ID: masterID}.Pack(),
+			ID:   masterID.Pack(),
 		},
 	}
 	var cmd = Cmd{

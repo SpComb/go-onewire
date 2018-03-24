@@ -7,22 +7,17 @@ import (
 
 type MasterID uint32
 
-type IDMaster struct {
-	ID MasterID
-	_  uint32
-}
-
-func (id IDMaster) Pack() MessageID {
+func (id MasterID) Pack() MessageID {
 	var messageID MessageID
 
-	byteOrder.PutUint32(messageID[0:4], uint32(id.ID))
+	byteOrder.PutUint32(messageID[0:4], uint32(id))
 	byteOrder.PutUint32(messageID[4:8], 0)
 
 	return messageID
 }
 
-func (id *IDMaster) Unpack(data MessageID) {
-	id.ID = MasterID(byteOrder.Uint32(data[0:4]))
+func (id *MasterID) Unpack(data MessageID) {
+	*id = MasterID(byteOrder.Uint32(data[0:4]))
 }
 
 type MasterList []MasterID
