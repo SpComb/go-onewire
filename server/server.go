@@ -5,6 +5,7 @@ import (
 	"github.com/SpComb/go-onewire/netlink/connector/w1"
 
 	"fmt"
+	"sync"
 	"time"
 )
 
@@ -44,7 +45,9 @@ type Server struct {
 	eventConn *w1.Conn
 
 	eventChan chan w1.Event
-	sensors   map[api.SensorID]*Sensor
+
+	sensors      map[api.SensorID]*Sensor
+	sensorsMutex sync.RWMutex
 }
 
 func (s *Server) listenEvents() error {
@@ -110,7 +113,7 @@ func (s *Server) initSlave(id w1.SlaveID) {
 
 	log.Infof("init slave %v", id)
 
-	s.sensors[sensor.id] = sensor
+	s.SetSensor(sensor)
 }
 
 func (s *Server) addSlave(id w1.SlaveID) {
@@ -118,20 +121,52 @@ func (s *Server) addSlave(id w1.SlaveID) {
 
 	log.Infof("add slave %v", id)
 
-	s.sensors[sensor.id] = sensor
+	s.SetSensor(sensor)
 }
 
 func (s *Server) removeSlave(id w1.SlaveID) {
-	log.Infof("onewire: remove slave %v", id)
+	if sensor := s.GetSensor(api.SensorID(id.String())); sensor != nil {
+		log.Infof("remove slave %v", id)
 
-	delete(s.sensors, api.SensorID(id.String()))
+		s.DeleteSensor(sensor)
+	}
 }
 
 func (s *Server) refresh() {
 	log.Debugf("refresh")
 
-	for _, sensor := range s.sensors {
+	s.WalkSensors(func(sensor *Sensor) {
 		sensor.refresh()
+	})
+}
+
+func (s *Server) GetSensor(id api.SensorID) *Sensor {
+	s.sensorsMutex.RLock()
+	defer s.sensorsMutex.RUnlock()
+
+	return s.sensors[id]
+}
+
+func (s *Server) SetSensor(sensor *Sensor) {
+	s.sensorsMutex.Lock()
+	defer s.sensorsMutex.Unlock()
+
+	s.sensors[sensor.id] = sensor
+}
+
+func (s *Server) DeleteSensor(sensor *Sensor) {
+	s.sensorsMutex.Lock()
+	defer s.sensorsMutex.Unlock()
+
+	delete(s.sensors, sensor.id)
+}
+
+func (s *Server) WalkSensors(f func(sensor *Sensor)) {
+	s.sensorsMutex.RLock()
+	defer s.sensorsMutex.RUnlock()
+
+	for _, sensor := range s.sensors {
+		f(sensor)
 	}
 }
 
@@ -148,9 +183,9 @@ func (s *Server) Run() error {
 func (s *Server) MakeAPISensors() []api.Sensor {
 	var apiList []api.Sensor
 
-	for _, sensor := range s.sensors {
+	s.WalkSensors(func(sensor *Sensor) {
 		apiList = append(apiList, sensor.MakeAPI())
-	}
+	})
 
 	return apiList
 }
