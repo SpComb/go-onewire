@@ -22,6 +22,7 @@ func (d *Device) Cmd(cmd Cmd, write []byte, read []byte) error {
 	return d.conn.CmdSlave(d.id, write, read)
 }
 
+// XXX: need to wait 100..800ms for conversion to happen?
 func (d *Device) ConvertT() error {
 	return d.Cmd(CmdConvertT, nil, nil)
 }

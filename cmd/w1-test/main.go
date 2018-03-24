@@ -30,14 +30,7 @@ func init() {
 	options.LogConnector.InitFlags()
 }
 
-func run() error {
-	w1conn, err := w1.Dial()
-	if err != nil {
-		return fmt.Errorf("w1.Dial: %v", err)
-	} else {
-		log.Infof("Connected to w1-netlink: %v", w1conn)
-	}
-
+func scan(w1conn *w1.Conn) error {
 	if masters, err := w1conn.ListMasters(); err != nil {
 		return fmt.Errorf("w1.ListMasters: %v", err)
 	} else {
@@ -48,7 +41,6 @@ func run() error {
 				return fmt.Errorf("w1.ListSlaves %v: %v", masterID, err)
 			} else {
 				for _, slaveID := range slaves {
-
 					switch slaveID.Family {
 					case ds18b20.Family:
 						var device = ds18b20.MakeDevice(w1conn, slaveID)
@@ -73,6 +65,50 @@ func run() error {
 				}
 			}
 		}
+	}
+
+	return nil
+}
+
+func onEvent(event w1.Event) {
+	switch event.Type {
+	case w1.MsgTypeSlaveAdd:
+		log.Infof("Add Slave: %v", event.SlaveID())
+	case w1.MsgTypeSlaveRemove:
+		log.Infof("Remove Slave: %v", event.SlaveID())
+	case w1.MsgTypeMasterAdd:
+		log.Infof("Add Master: %v", event.MasterID())
+	case w1.MsgTypeMasterRemove:
+		log.Infof("Remove Master: %v", event.MasterID())
+	}
+}
+
+func listen(w1conn *w1.Conn) error {
+	if err := w1conn.Listen(); err != nil {
+		return fmt.Errorf("w1 Listen: %v", err)
+	}
+
+	for {
+		if err := w1conn.ReadEvents(onEvent); err != nil {
+			return fmt.Errorf("w1 ReadEvent: %v", err)
+		}
+	}
+}
+
+func run() error {
+	w1conn, err := w1.Dial()
+	if err != nil {
+		return fmt.Errorf("w1.Dial: %v", err)
+	} else {
+		log.Infof("Connected to w1-netlink: %v", w1conn)
+	}
+
+	if err := scan(w1conn); err != nil {
+		return err
+	}
+
+	if err := listen(w1conn); err != nil {
+		return err
 	}
 
 	return nil

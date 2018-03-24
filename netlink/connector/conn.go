@@ -91,6 +91,10 @@ func (c *Conn) Execute(msg Message) ([]Message, error) {
 	}
 }
 
+func (c *Conn) JoinGroup(id ID) error {
+	return c.netlinkConn.JoinGroup(id.Idx)
+}
+
 func (c *Conn) Close() error {
 	return c.netlinkConn.Close()
 }

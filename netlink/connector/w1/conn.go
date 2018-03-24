@@ -248,6 +248,32 @@ func (c *Conn) CmdSlave(slaveID SlaveID, write []byte, read []byte) error {
 	return nil
 }
 
+func (c *Conn) Listen() error {
+	return c.connectorConn.JoinGroup(ConnectorID)
+}
+
+func (c *Conn) ReadEvents(f func(Event)) error {
+	msgs, err := c.Receive()
+	if err != nil {
+		return err
+	}
+
+	for _, msg := range msgs {
+		log.Infof("ReadEvent: %#v", msg)
+
+		switch msg.Type {
+		case MsgTypeSlaveAdd, MsgTypeSlaveRemove:
+			f(Event{msg.Type, msg.ID})
+		case MsgTypeMasterAdd, MsgTypeMasterRemove:
+			f(Event{msg.Type, msg.ID})
+		default:
+			return fmt.Errorf("Unexpected event message: %#v", msg)
+		}
+	}
+
+	return nil
+}
+
 func (c *Conn) Close() error {
 	return c.connectorConn.Close()
 }
