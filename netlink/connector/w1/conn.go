@@ -156,6 +156,94 @@ func (c *Conn) ListSlaves(masterID MasterID) (SlaveList, error) {
 	log.Infof("ListSlaves %v: %v", masterID, slaveList)
 
 	return slaveList, nil
+
+}
+
+func (c *Conn) CmdSlave(slaveID SlaveID, write []byte, read []byte) error {
+	var msg = Message{
+		Header: Header{
+			Type: MsgTypeSlaveCmd,
+			ID:   slaveID.Pack(),
+		},
+	}
+	var cmds []Cmd
+
+	if write != nil {
+		cmds = append(cmds, Cmd{
+			CmdHeader: CmdHeader{
+				Cmd: CmdWrite,
+			},
+			Data: write,
+		})
+	}
+	if read != nil {
+		cmds = append(cmds, Cmd{
+			CmdHeader: CmdHeader{
+				Cmd: CmdRead,
+			},
+			Data: read,
+		})
+	}
+
+	if data, err := MarshalCmd(cmds...); err != nil {
+		return fmt.Errorf("MarshalCmd: %v", err)
+	} else {
+		msg.Data = data
+	}
+
+	if err := c.Send(msg); err != nil {
+		return err
+	}
+
+	var cmdAcks = 0
+
+	for {
+		connectorMsgs, err := c.connectorConn.Receive()
+		if err != nil {
+			return err
+		}
+
+		for _, connectorMsg := range connectorMsgs {
+			var msg Message
+
+			if err := msg.UnmarshalBinary(connectorMsg.Data); err != nil {
+				return err
+			}
+
+			log.Debugf("Receive: %#v", msg)
+
+			cmds, err := UnmarshalCmdList(msg.Data)
+			if err != nil {
+				return fmt.Errorf("UnmarshalCmdList: %v", err)
+			}
+
+			for _, cmd := range cmds {
+				if connectorMsg.Ack == 0 {
+					// read/write ack
+					cmdAcks++
+
+					log.Debugf("ReadSlave %v: ack %v (%d/%d)", slaveID, cmd.Cmd, cmdAcks, len(cmds))
+
+				} else if cmd.Cmd == CmdRead {
+					if len(cmd.Data) != len(read) {
+						return fmt.Errorf("Short read: %#v", msg)
+					} else {
+						copy(read, cmd.Data)
+
+						log.Infof("ReadSlave %v: %#v", slaveID, cmd.Data)
+					}
+				} else {
+					return fmt.Errorf("Unexpected response cmd %v: %#v", cmd.Cmd, msg)
+				}
+			}
+		}
+
+		if cmdAcks >= len(cmds) {
+			break
+		}
+	}
+
+	return nil
 }
 
 func (c *Conn) Close() error {

@@ -40,14 +40,23 @@ func run() error {
 	if masters, err := w1conn.ListMasters(); err != nil {
 		return fmt.Errorf("w1.ListMasters: %v", err)
 	} else {
-		for _, master := range masters {
-			log.Infof("Master: %v", master)
+		for _, masterID := range masters {
+			log.Infof("Master: %v", masterID)
 
-			if slaves, err := w1conn.ListSlaves(master); err != nil {
-				return fmt.Errorf("w1.ListSlaves %v: %v", master, err)
+			if slaves, err := w1conn.ListSlaves(masterID); err != nil {
+				return fmt.Errorf("w1.ListSlaves %v: %v", masterID, err)
 			} else {
-				for _, slave := range slaves {
-					log.Infof("Slave: %v", slave)
+				for _, slaveID := range slaves {
+					log.Infof("Slave: %v", slaveID)
+
+					var writeBuf = []byte{0xBE}
+					var readBuf = make([]byte, 2)
+
+					if err := w1conn.CmdSlave(slaveID, writeBuf, readBuf); err != nil {
+						return fmt.Errorf("w1.ReadSlave %v: %v", slaveID, err)
+					} else {
+						log.Infof("Slave %v: %v", slaveID, readBuf)
+					}
 				}
 			}
 		}
