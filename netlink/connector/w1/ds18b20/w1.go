@@ -16,12 +16,6 @@ const (
 	CmdReadScratchpad      = 0xBE
 )
 
-type Temperature uint16
-
-func unpackTemperature(lsb byte, msb byte) Temperature {
-	return Temperature((uint16(msb) << 8) | uint16(lsb))
-}
-
 const scratchpadSize = 9
 
 type Scratchpad struct {
