@@ -18,11 +18,13 @@ const (
 	MsgTypeListMasters          = 6
 )
 
+type MessageID [8]byte
+
 type Header struct {
 	Type   MsgType
 	Status uint8
 	Len    uint16
-	ID     [8]byte
+	ID     MessageID
 }
 
 type Message struct {

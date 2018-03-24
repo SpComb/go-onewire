@@ -42,6 +42,14 @@ func run() error {
 	} else {
 		for _, master := range masters {
 			log.Infof("Master: %v", master)
+
+			if slaves, err := w1conn.ListSlaves(master); err != nil {
+				return fmt.Errorf("w1.ListSlaves %v: %v", master, err)
+			} else {
+				for _, slave := range slaves {
+					log.Infof("Slave: %v", slave)
+				}
+			}
 		}
 	}
 

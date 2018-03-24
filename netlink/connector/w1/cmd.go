@@ -20,45 +20,93 @@ const (
 	CmdListSlaves          = 8
 )
 
+type CmdHeader struct {
+	Cmd CmdType
+	_   uint8
+	Len uint16
+}
+
 type Cmd struct {
-	Header struct {
-		Cmd CmdType
-		_   uint8
-		Len uint16
-	}
+	CmdHeader
 	Data []byte
 }
 
-func (cmd *Cmd) MarshalBinary() ([]byte, error) {
-	cmd.Header.Len = uint16(len(cmd.Data))
+func (cmd *Cmd) marshalBinary(buf *bytes.Buffer) error {
+	cmd.Len = uint16(len(cmd.Data))
 
-	var buf bytes.Buffer
-
-	if err := binary.Write(&buf, byteOrder, cmd.Header); err != nil {
-		return nil, err
+	if err := binary.Write(buf, byteOrder, cmd.CmdHeader); err != nil {
+		return err
 	}
 
 	if _, err := buf.Write(cmd.Data); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (cmd *Cmd) MarshalBinary() ([]byte, error) {
+	var buf bytes.Buffer
+
+	if err := cmd.marshalBinary(&buf); err != nil {
 		return nil, err
 	}
 
 	return buf.Bytes(), nil
 }
 
-func (cmd *Cmd) UnmarshalBinary(data []byte) error {
-	var buf = bytes.NewReader(data)
-
-	if err := binary.Read(buf, byteOrder, &cmd.Header); err != nil {
+func (cmd *Cmd) unmarshalBinary(reader io.Reader) error {
+	if err := binary.Read(reader, byteOrder, &cmd.CmdHeader); err != nil {
 		return err
 	}
 
-	cmd.Data = make([]byte, cmd.Header.Len)
+	cmd.Data = make([]byte, cmd.Len)
 
-	if read, err := buf.Read(cmd.Data); err != nil {
+	if read, err := reader.Read(cmd.Data); err != nil {
 		return err
 	} else if read != len(cmd.Data) {
 		return io.EOF
 	}
 
 	return nil
+}
+
+func (cmd *Cmd) UnmarshalBinary(data []byte) error {
+	var reader = bytes.NewReader(data)
+
+	if err := cmd.unmarshalBinary(reader); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func MarshalCmd(cmdList ...Cmd) ([]byte, error) {
+	var buf bytes.Buffer
+
+	for _, cmd := range cmdList {
+		if err := cmd.marshalBinary(&buf); err != nil {
+			return nil, err
+		}
+	}
+
+	return buf.Bytes(), nil
+}
+
+func UnmarshalCmdList(data []byte) ([]Cmd, error) {
+	var reader = bytes.NewReader(data)
+	var cmdList []Cmd
+
+	for reader.Len() > 0 {
+		var cmd Cmd
+
+		if err := cmd.unmarshalBinary(reader); err != nil {
+			return cmdList, err
+		}
+
+		cmdList = append(cmdList, cmd)
+	}
+
+	return cmdList, nil
+
 }

@@ -99,6 +99,50 @@ func (c *Conn) ListMasters() (MasterList, error) {
 	return masterList, nil
 }
 
+func (c *Conn) ListSlaves(masterID MasterID) (SlaveList, error) {
+	var msg = Message{
+		Header: Header{
+			Type: MsgTypeMasterCmd,
+			ID:   IDMaster{ID: masterID}.Pack(),
+		},
+	}
+	var cmd = Cmd{
+		CmdHeader: CmdHeader{
+			Cmd: CmdListSlaves,
+		},
+	}
+
+	if data, err := MarshalCmd(cmd); err != nil {
+		return nil, fmt.Errorf("MarshalCmd: %v", err)
+	} else {
+		msg.Data = data
+	}
+
+	msgs, err := c.Request(msg)
+	if err != nil {
+		return nil, err
+	}
+
+	var slaveList SlaveList
+
+	for _, msg := range msgs {
+		cmds, err := UnmarshalCmdList(msg.Data)
+		if err != nil {
+			return slaveList, fmt.Errorf("UnmarshalCmdList: %v", err)
+		}
+
+		for _, cmd := range cmds {
+			if err := slaveList.UnmarshalBinary(cmd.Data); err != nil {
+				return slaveList, fmt.Errorf("Unmarshal %T: %v", slaveList, err)
+			}
+
+			log.Debugf("ListSlaves %v: %#v", masterID, slaveList)
+		}
+	}
+
+	return slaveList, nil
+}
+
 func (c *Conn) Close() error {
 	return c.connectorConn.Close()
 }
