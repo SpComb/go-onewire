@@ -1,5 +1,11 @@
 # Libraries
 
+### `github.com/SpComb/go-onewire/api`
+
+API definitions for the `server`
+
+[![](https://godoc.org/github.com/SpComb/go-onewire/api?status.svg)](http://godoc.org/github.com/SpComb/go-onewire/api)
+
 ### `github.com/SpComb/go-onewire/netlink/connector`
 
 Linux `NETLINK_CONNECTOR` protocol support.
