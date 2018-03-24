@@ -48,11 +48,11 @@ func (c *Conn) Receive() ([]Message, error) {
 
 func (c *Conn) Execute(msg Message) ([]Message, error) {
 	if connectorMsg, err := packMessage(msg); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("w1 pack %#v: %v", msg, err)
 	} else if connectorMsgs, err := c.connectorConn.Execute(connectorMsg); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Execute %#v: %v", msg, err)
 	} else if msgs, err := unpackMessages(connectorMsgs); err != nil {
-		return msgs, err
+		return msgs, fmt.Errorf("w1 unpack %#v: %v", connectorMsgs, err)
 	} else if err := validateMessages(msg, msgs); err != nil {
 		return msgs, fmt.Errorf("Execute: %v", err)
 	} else {

@@ -57,7 +57,9 @@ func (msg *Message) UnmarshalBinary(data []byte) error {
 
 	msg.Data = make([]byte, msg.Len)
 
-	if read, err := buf.Read(msg.Data); err != nil {
+	if msg.Len == 0 {
+
+	} else if read, err := buf.Read(msg.Data); err != nil {
 		return err
 	} else if read != len(msg.Data) {
 		return io.EOF

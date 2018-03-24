@@ -19,34 +19,36 @@ type Message struct {
 	Data []byte
 }
 
-func (m *Message) MarshalBinary() ([]byte, error) {
-	m.Header.Len = uint16(len(m.Data))
+func (msg *Message) MarshalBinary() ([]byte, error) {
+	msg.Header.Len = uint16(len(msg.Data))
 
 	var buf bytes.Buffer
 
-	if err := binary.Write(&buf, byteOrder, m.Header); err != nil {
+	if err := binary.Write(&buf, byteOrder, msg.Header); err != nil {
 		return nil, err
 	}
 
-	if _, err := buf.Write(m.Data); err != nil {
+	if _, err := buf.Write(msg.Data); err != nil {
 		return nil, err
 	}
 
 	return buf.Bytes(), nil
 }
 
-func (m *Message) UnmarshalBinary(data []byte) error {
+func (msg *Message) UnmarshalBinary(data []byte) error {
 	var buf = bytes.NewReader(data)
 
-	if err := binary.Read(buf, byteOrder, &m.Header); err != nil {
+	if err := binary.Read(buf, byteOrder, &msg.Header); err != nil {
 		return err
 	}
 
-	m.Data = make([]byte, m.Header.Len)
+	msg.Data = make([]byte, msg.Len)
 
-	if read, err := buf.Read(m.Data); err != nil {
+	if msg.Len == 0 {
+
+	} else if read, err := buf.Read(msg.Data); err != nil {
 		return err
-	} else if read != len(m.Data) {
+	} else if read != len(msg.Data) {
 		return io.EOF
 	}
 
