@@ -3,25 +3,47 @@ package w1
 import (
 	"bytes"
 	"encoding/binary"
+	"fmt"
 	"io"
 )
 
-type MsgType uint8
+type MessageType uint8
 
 const (
-	MsgTypeSlaveAdd     MsgType = 0
-	MsgTypeSlaveRemove          = 1
-	MsgTypeMasterAdd            = 2
-	MsgTypeMasterRemove         = 3
-	MsgTypeMasterCmd            = 4
-	MsgTypeSlaveCmd             = 5
-	MsgTypeListMasters          = 6
+	MsgTypeSlaveAdd     MessageType = 0
+	MsgTypeSlaveRemove              = 1
+	MsgTypeMasterAdd                = 2
+	MsgTypeMasterRemove             = 3
+	MsgTypeMasterCmd                = 4
+	MsgTypeSlaveCmd                 = 5
+	MsgTypeListMasters              = 6
 )
+
+func (t MessageType) String() string {
+	switch t {
+	case MsgTypeSlaveAdd:
+		return "SlaveAdd"
+	case MsgTypeSlaveRemove:
+		return "SlaveRemove"
+	case MsgTypeMasterAdd:
+		return "MasterAdd"
+	case MsgTypeMasterRemove:
+		return "MasterRemove"
+	case MsgTypeMasterCmd:
+		return "MasterCmd"
+	case MsgTypeSlaveCmd:
+		return "SlaveCmd"
+	case MsgTypeListMasters:
+		return "ListMasters"
+	default:
+		return fmt.Sprintf("%d", t)
+	}
+}
 
 type MessageID [8]byte
 
 type Header struct {
-	Type   MsgType
+	Type   MessageType
 	Status ErrorStatus
 	Len    uint16
 	ID     MessageID
