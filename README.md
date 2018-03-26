@@ -41,7 +41,7 @@ DS18B20 specific support for the Linux `w1` netlink API.
 ## Docker
 
     docker build -t onewire .
-    docker run -d --name=onewire --restart=always --net=host --privileged qmsk/onewire
+    docker run -d --name=onewire --net=host --privileged qmsk/onewire
 
 ## Usage
 ```
