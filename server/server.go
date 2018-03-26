@@ -50,7 +50,7 @@ type Server struct {
 	sensorsMutex sync.RWMutex
 }
 
-func (s *Server) listenEvents() error {
+func (s *Server) listenEvents() {
 	defer close(s.eventChan)
 
 	err := s.eventConn.Listen(func(event w1.Event) error {
@@ -58,11 +58,7 @@ func (s *Server) listenEvents() error {
 		return nil
 	})
 
-	if err != nil {
-		return fmt.Errorf("w1 Listen: %v", err)
-	}
-
-	return nil
+	log.Errorf("Listen stopped: %v", err)
 }
 
 func (s *Server) scan() error {
@@ -93,7 +89,7 @@ func (s *Server) run() error {
 
 		case event, ok := <-s.eventChan:
 			if !ok {
-				break
+				return nil
 			}
 
 			log.Debugf("event: %#v", event)
